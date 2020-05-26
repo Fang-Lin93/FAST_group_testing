@@ -14,4 +14,5 @@ For a more detailed overview of the repository, please see the paper at the...(u
 
 
 See [example](example.ipynb) for examples of using our program
-[simulations](simulation_example_betas.py) is an example of generating simulation results of our paper.
+
+[simulations](simulation_example_betas.py) is an example of generating simulation results in our paper.
