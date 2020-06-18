@@ -4,10 +4,12 @@ from utils import evaluate, flatten
 
 class Algorithm(object):
     def __init__(self, **kwargs):
+        self.name = None
         self.flat_x = None
         self.PPT = None
         self.accuracy = None
         self.costs = None
+        self.test = kwargs
         self.fnr = kwargs.get('fnr')
         self.fpr = kwargs.get('fpr')
         self.sensitivity = 1 - self.fnr
@@ -24,12 +26,13 @@ class Algorithm(object):
         self.x = args[0]
         self.flat_x = flatten(self.x)  # record the true state
         self.N = len(self.flat_x)
-        self.result = self.strategy(*args)
+        self.result = self.strategy(*args, **kwargs)
         if self.costs is not 0:
             self.PPT = self.N / self.costs
         if isinstance(self.result, list):
             self.accuracy = evaluate(self.flat_x, self.result)
-        return self.result, self.PPT
+            self.gt_fnr, self.gt_fpr = self.accuracy
+        return self.PPT
 
     def strategy(self, *inputs):
         """
