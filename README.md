@@ -15,4 +15,4 @@ For a more detailed overview of the repository, please see the paper at the...(u
 
 See [Example](example.ipynb) for examples of using our program
 
-[Simulation](simulation_example_betas.py) is an example of generating simulation results in our paper.
+File [Simulation](simulation.py) is an example of generating simulation results in our paper.
