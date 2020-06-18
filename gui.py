@@ -4,7 +4,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.config import Config
-import simulation
+import sim
 
 Config.set('graphics', 'width', '700')
 Config.set('graphics', 'height', '700')
@@ -15,7 +15,7 @@ SaveInput = ""
 
 class GroupTestApp(App):
     def __init__(self, **kwargs):
-        super(GroupTestApp).__init__(**kwargs)
+        super(GroupTestApp, self).__init__(**kwargs)
         self.result = TextInput(readonly=True, font_size=32, size_hint=[1, .75], background_color=[1, 1, 1, .8])
         self.household = TextInput(hint_text="Household distribution", text="([1, 3, 5, 7], [0.02, 0.3, 0.46, 0.22])",
                                    font_size=32, size_hint=[1, .75], multiline=False)
@@ -34,7 +34,6 @@ class GroupTestApp(App):
 
     def build(self):
         root = BoxLayout(orientation='vertical', padding=1)
-
         root.add_widget(self.result)
         paras = GridLayout(cols=3)
         paras_list = [self.rho, self.beta, self.size,
@@ -50,10 +49,6 @@ class GroupTestApp(App):
         methods.add_widget(Button(text='FeatCostly', on_press=self.calculate))
         methods.add_widget(Button(text='FeatCheap', on_press=self.calculate))
         root.add_widget(methods)
-
-        # for button in allButtons_list:
-        #     allButtons.add_widget(Button(text=button, on_press=self.calculate))
-        # root.add_widget(allButtons)
 
         return root
 
@@ -74,7 +69,7 @@ class GroupTestApp(App):
                     'fpr': eval(self.fpr.text),
                     'dilution_factor': 0.0
                 }
-                running = simulation.Optimal(**paras_sample)
+                running = sim.Optimal(**paras_sample)
                 res, opt = running.get_opt(click.text, **test)
 
                 display = 'Results:' + '\n'
