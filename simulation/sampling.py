@@ -6,11 +6,11 @@ class SampleGenerator(object):
     methods for generate simulation data
     """
 
-    def __init__(self, paras):
-        self.size = paras['size']
-        self.rho = paras['rho']
-        self.sub_pool = paras['sub_pool']
-        self.beta = paras['beta']
+    def __init__(self, **paras):
+        self.size = paras.get('size')
+        self.rho = paras.get('rho')
+        self.sub_pool = paras.get('household')
+        self.beta = paras.get('beta')
         self.mean_pool = sum(np.array(self.sub_pool[0]) * np.array(self.sub_pool[1]))
         self.rho_star = self.mean_pool / (1 + (self.mean_pool - 1) * self.beta) * self.rho
 
