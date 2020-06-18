@@ -6,6 +6,29 @@ def mean_ppt(k, rho, r=1):
     n_tests = (1 - np.power(1 - rho, k)) * k * r + r
     return k / n_tests
 
+def two_ppt(k,m,rho,r=1):
+    rho_star = 1-np.power(1 - rho, m)
+    k_star = k/m
+    n_tests = (1 - np.power(1 - rho_star, k_star)) * k_star * r + r + k_star*rho_star*m*r
+    return k/n_tests
+
+
+def theo_optk(rho):
+    k = 1
+    while mean_ppt(k,rho) < mean_ppt(k+1,rho):
+        k += 1
+    return k
+# se= []
+# tr = []
+# rho = 0
+# for r in np.linspace(0.00001,0.4,100000):
+#       se += [int(round(1/np.sqrt(r)))]
+#       tr += [theo_optk(r)]
+#       if se[-1] == tr[-1] or (se[-1]+1)== tr[-1]:
+#           rho+= 1
+# print(rho)
+
+
 
 def majority_rate(p, r=3):
     """
@@ -37,6 +60,7 @@ def pcr(x, sensitivity=0.98, specificity=0.999, r=1, prop=1.0, d=0, op=False):
     else:
         group_sensi = 1 - np.power((1 - sensitivity) / specificity, np.power(prop, d)) * specificity
         return int(sum([np.random.uniform() <= group_sensi for _ in range(r)]) > (0 if op else int(r / 2)))
+
 
 
 def sir(y, delta_t=1, beta=1 / 2, gamma=1 / 7):

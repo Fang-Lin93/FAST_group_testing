@@ -4,9 +4,11 @@ import statsmodels.api as sm
 import matplotlib.cm as cm
 from scipy.interpolate import splrep, splev
 import matplotlib.pyplot as plt
+import seaborn as sns
 from .utils import sir, mean_ppt
+from scipy.interpolate import interp1d
+from scipy.signal import savgol_filter
 from mpl_toolkits.mplot3d import Axes3D
-
 fig_size = (8, 5)
 line_width = 2.0
 scatter_width = 1
@@ -117,6 +119,12 @@ def lowess(x, y, frac=0.05):
     return sm.nonparametric.lowess(y, x, frac=frac)[:, 1]
 
 
+def sg_filter(x, y, wind=11, degree=3):
+    itp = interp1d(x, y, kind='linear')
+    x_bal = np.linspace(x.min(), x.max(), len(x))
+    return savgol_filter(itp(x_bal), wind, degree)
+
+
 def spline(x, y, k=None, s=None):
     if s is None:
         s = 0.5
@@ -124,34 +132,104 @@ def spline(x, y, k=None, s=None):
         k = 3
     return splev(x, splrep(x, y, k=k, s=s))
 
+#
+# def plot_scatter_line(data, frac, title=None, x_axis=None, scatters=False, line_style=None, cubicspl=False, sgf=False,
+#                       s=None, k=None, split=False, colors=None, mark=False, mark_s=False, wind=11, degree=3):
+#     """
+#     Plot smooth interpolation of scatter data, the default method is lowess
+#     :param colors:
+#     :param split: where to perform subplots
+#     :param data: pd.Dataframe with x, y in columns
+#     :param frac: frac for lowess
+#     :param title: title of the output figure
+#     :param x_axis: column name of independent variables
+#     :param scatters: whether show scatters
+#     :param line_style: linestyle of smooth lines
+#     :param cubicspl: whether use cubic spline
+#     :param s: smooth factor for cubic spline
+#     :param k: k=3 gives cubic spline, k=2 gives quadratic spline, k =1 gives linear
+#     :return: after run this function, use 'plt' to continue edite the figure.
+#     """
+#     if x_axis is None:
+#         x_axis = data.columns[0]
+#     if split is False:
+#         plt.figure(figsize=fig_size)
+#     smooth = pd.DataFrame(data[x_axis])
+#     for col in data.columns[1:]:
+#         if cubicspl:
+#             smooth[col] = spline(data[x_axis], data[col], s=s, k=k)
+#         elif sgf:
+#             smooth[col] = sg_filter(data[x_axis], data[col], wind=wind, degree=degree)
+#         else:
+#             smooth[col] = lowess(data[x_axis], data[col], frac=frac)
+#     if colors is None:
+#         colors = cm.Dark2_r(np.linspace(0, 1, len(data.columns[1:])))
+#     for i in range(1, len(data.columns)):
+#         if split is True:
+#             plt.subplot(1, len(data.columns) - 1, i)
+#         plt.plot(data[x_axis], smooth.iloc[:, i], color=colors[i - 1], label=data.columns[i],
+#                  linewidth=line_width, linestyle=line_style[i - 1] if line_style else 'solid')
+#         if scatters:
+#             plt.scatter(data[x_axis], data.iloc[:, i], color=colors[i - 1], s=scatter_width)
+#
+#         # marker
+#         if mark_s is True:
+#             plt.vlines(data[x_axis], 0, smooth.iloc[:, i], linestyle="dashed")
+#             plt.hlines(smooth.iloc[:, i], 0, data[x_axis], linestyle="dashed")
+#         if mark is True:
+#             plt.vlines(data[x_axis], 0, data.iloc[:, i], linestyle="dashed")
+#             plt.hlines(data.iloc[:, i], 0, data[x_axis], linestyle="dashed")
+#         plt.xlabel(x_axis)
+#         plt.legend()
+#     plt.title(title)
 
-def plot_scatter_line(data, frac, title=None, x_axis='pool_size', scatters=False, linestyle=None, cubicspl=False,
-                      s=None, k=None):
+
+def plot_scatter_line( data, frac, axes=None, scatters=False, line_style=None, smooth = None,
+                      s=None, k=None, colors=None, wind=11, degree=3):
     """
     Plot smooth interpolation of scatter data, the default method is lowess
+    :param colors:
+    :param split: where to perform subplots
     :param data: pd.Dataframe with x, y in columns
     :param frac: frac for lowess
     :param title: title of the output figure
     :param x_axis: column name of independent variables
     :param scatters: whether show scatters
-    :param linestyle: linestyle of smooth lines
+    :param line_style: linestyle of smooth lines
     :param cubicspl: whether use cubic spline
     :param s: smooth factor for cubic spline
     :param k: k=3 gives cubic spline, k=2 gives quadratic spline, k =1 gives linear
     :return: after run this function, use 'plt' to continue edite the figure.
     """
-    smooth = pd.DataFrame(data[x_axis])
+    if axes is None:
+        fig, axes = plt.subplots(figsize=fig_size)
+    x_axis = data.columns[0]
+
+    smoo = pd.DataFrame(data[x_axis])
     for col in data.columns[1:]:
-        if not cubicspl:
-            smooth[col] = lowess(data[x_axis], data[col], frac=frac)
+        if smooth is 'cubicspline':
+            smoo[col] = spline(data[x_axis], data[col], s=s, k=k)
+        elif smooth is 'sgf':
+            smoo[col] = sg_filter(data[x_axis], data[col], wind=wind, degree=degree)
+        elif smooth is 'lowess':
+            smoo[col] = lowess(data[x_axis], data[col], frac=frac)
         else:
-            smooth[col] = spline(data[x_axis], data[col], s=s, k=k)
-    colors = cm.Dark2_r(np.linspace(0, 1, len(data.columns[1:])))
-    plt.figure(figsize=fig_size)
-    for i in range(1, len(data.columns)):
-        plt.plot(data[x_axis], smooth.iloc[:, i], color=colors[i - 1], label=data.columns[i],
-                 linewidth=line_width, linestyle=linestyle[i - 1] if linestyle else 'solid')
+            pass
+    if colors is None:
+        colors = cm.Dark2_r(np.linspace(0, 1, len(data.columns[1:])))
+    if smooth is not None:
+        for i in range(1, len(data.columns)):
+            axes.plot(data[x_axis], smoo.iloc[:, i], color=colors[i - 1], label=data.columns[i],
+                      linewidth=line_width, linestyle=line_style[i - 1] if line_style else 'solid')
         if scatters:
-            plt.scatter(data[x_axis], data.iloc[:, i], color=colors[i - 1], s=scatter_width)
+            axes.scatter(data[x_axis], data.iloc[:, i], color=colors[i - 1], s=scatter_width)
+    else:
+        for i in range(1, len(data.columns)):
+            sns.regplot(x=data[x_axis], y=data.iloc[:, i], color=colors[i - 1],
+                        line_kws={'linewidth': line_width}, ax=axes, x_estimator=np.mean)
+
+
+    plt.xlabel(x_axis)
     plt.legend()
-    plt.title(title)
+    return fig, axes
+
